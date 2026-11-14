@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocapcha - démo</title>
+<script>
+  // MODE DÉMO : faux serveur intégré, aucune vraie vérification n'a lieu.
+  // Pour une vraie vérification, supprime ce bloc et mets l'URL de ton serveur Cap
+  // dans data-cap-api-endpoint (ex. https://cap.mondomaine.fr/<site-key>/).
+  window.CAP_CUSTOM_FETCH = async (url) => {
+    const json = (o) => new Response(JSON.stringify(o), {status: 200, headers: {"Content-Type": "application/json"}});
+    if (url.endsWith("/challenge")) return json({challenge: Array.from({length: 5}, () => ["a".repeat(32), "ab"]), token: "", expires: Date.now() + 600000});
+    return json({success: true, token: "ok", expires: Date.now() + 60000});
+  };
+</script>
+<script src="./widget/src/cap.min.js"></script>
+<style>
+  body { font-family: system-ui, sans-serif; display: grid; gap: 16px; padding: 40px; justify-items: start; }
+  #status { font: 14px/1.4 ui-monospace, monospace; color: #555; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <cap-widget id="cap" data-cap-api-endpoint="/api/" data-cap-i18n-initial-state="Je ne suis pas un robot"></cap-widget>
+  <div id="status">Clique sur la case pour lancer la vérification…</div>
+  <script>
+    const status = document.getElementById("status"), cap = document.getElementById("cap");
+    cap.addEventListener("progress", (e) => status.textContent = "Calcul en cours : " + e.detail.progress + " %");
+    cap.addEventListener("solve",    (e) => status.textContent = "Vérifié (mode démo). Jeton : " + e.detail.token);
+    cap.addEventListener("error",    (e) => status.textContent = "Erreur : " + (e.detail.message || e.detail.code));
+  </script>
+</body>
+</html>
